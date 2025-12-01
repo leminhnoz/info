@@ -1,16 +1,18 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
-<title>Leminhnoz informations</title> 
+<meta charset="UTF-8">
+<title>Leminhnoz Informations</title>
 <style>
 body{
-  font-family:sans-serif;
+  margin:0;
+  padding:0;
+  height:100vh;
+  overflow:hidden;
   background:#0f1724;
   color:#e6eef8;
-  overflow:hidden;
-  margin:0;
-  height:100vh;
+  font-family:sans-serif;
+  cursor:none; /* ẩn cursor mặc định */
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -21,17 +23,19 @@ body{
   margin:10px 0;
   white-space:pre-wrap;
   opacity:0;
-  transition: opacity 2s;
+  transition: opacity 1s;
 }
-.cursor{
-  display:inline-block;
-  width:8px;
+.trail{
+  position:absolute;
+  width:10px;
+  height:10px;
   background:#60a5fa;
-  animation:blink 1s steps(2,start) infinite;
+  border-radius:50%;
+  pointer-events:none;
+  mix-blend-mode:screen;
+  opacity:0.8;
+  transform:translate(-50%,-50%);
 }
-@keyframes blink{50%{opacity:0}}
-
-/* Rain letters */
 .rain-letter{
   position:absolute;
   color:#60a5fa;
@@ -40,41 +44,59 @@ body{
   user-select:none;
   animation-name:fall;
   animation-timing-function:linear;
+  opacity:0.6;
 }
 @keyframes fall{
-  0% { transform:translateY(-20px);}
-  100% { transform:translateY(110vh);}
+  0% { transform:translateY(-20px); opacity:0.6;}
+  100% { transform:translateY(110vh); opacity:0;}
+}
+.cursor-char{
+  position:absolute;
+  color:#60a5fa;
+  font-weight:bold;
+  font-size:24px;
+  user-select:none;
 }
 </style>
 </head>
 <body>
 
-<div class="line" id="line1"></div><div class="cursor"></div>
-<div class="line" id="line2"></div><div class="cursor"></div>
+<div class="line" id="line1"></div>
+<div class="line" id="line2"></div>
+<div id="cursor" class="cursor-char">{}</div>
+
+<audio id="keySound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
 <script>
+const line1=document.getElementById('line1');
+const line2=document.getElementById('line2');
+const cursorEl=document.getElementById('cursor');
+const keySound=document.getElementById('keySound');
+
 const text1 = "Hi ! My full name is Nguyen Duc Le Minh in Vietnamese";
 const text2Prefix = "My age: ";
-const line1 = document.getElementById("line1");
-const line2 = document.getElementById("line2");
-const TYPE_SPEED = 40;
+const TYPE_SPEED=50;
 
-function typeText(element, text){
-  return new Promise(resolve=>{
-    let i=0;
-    element.style.opacity=1;
-    function step(){
-      if(i<=text.length){
-        element.textContent=text.slice(0,i);
-        i++;
-        setTimeout(step, TYPE_SPEED);
-      } else resolve();
+function playKey(){ keySound.currentTime=0; keySound.play().catch(()=>{}); }
+
+async function typeText(element, text, deleteAfter=false){
+  element.style.opacity=1;
+  for(let i=0;i<=text.length;i++){
+    element.textContent=text.slice(0,i);
+    playKey();
+    await new Promise(r=>setTimeout(r,TYPE_SPEED));
+  }
+  if(deleteAfter){
+    await new Promise(r=>setTimeout(r,1000));
+    for(let i=text.length;i>=0;i--){
+      element.textContent=text.slice(0,i);
+      await new Promise(r=>setTimeout(r,TYPE_SPEED/2));
     }
-    step();
-  });
+  }
 }
 
-const origin = new Date(2011,1,2,0,0,0,0);
+// ---- Age counter ----
+const origin=new Date(2011,1,2,0,0,0,0);
 function pad(n,len=2){return String(n).padStart(len,'0');}
 function computeAgeComponents(start, now){
   let years=0, months=0;
@@ -98,12 +120,12 @@ function computeAgeComponents(start, now){
 }
 
 function startAgeCounter(){
-  const displayLine=document.getElementById("line2");
+  const displayLine=line2;
   function tick(){
-    const now = new Date();
+    const now=new Date();
     const c=computeAgeComponents(origin,now);
     const timePart=`${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;
-    displayLine.textContent=text2Prefix+`${c.years} years ${c.months} months ${c.days} days ${timePart}`;
+    displayLine.textContent=text2Prefix+`${c.years}y ${c.months}m ${c.days}d ${timePart}`;
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -122,20 +144,50 @@ function spawnLetter(){
 }
 setInterval(spawnLetter,50);
 
-// ---- Loop typewriter + fade ----
+// ---- Cursor trail ----
+const trailCount=15;
+const trails=[];
+for(let i=0;i<trailCount;i++){
+  const div=document.createElement('div');
+  div.className='trail';
+  document.body.appendChild(div);
+  trails.push({el:div,x:window.innerWidth/2,y:window.innerHeight/2});
+}
+
+document.addEventListener('mousemove',e=>{
+  trails[0].x=e.clientX;
+  trails[0].y=e.clientY;
+  cursorEl.style.left=e.clientX+'px';
+  cursorEl.style.top=e.clientY+'px';
+});
+
+function animateTrails(){
+  for(let i=1;i<trails.length;i++){
+    trails[i].x += (trails[i-1].x - trails[i].x)*0.2;
+    trails[i].y += (trails[i-1].y - trails[i].y)*0.2;
+  }
+  trails.forEach(t=>{
+    t.el.style.left=t.x+'px';
+    t.el.style.top=t.y+'px';
+  });
+  requestAnimationFrame(animateTrails);
+}
+animateTrails();
+
+// ---- Loop typewriter + fade + delete ----
 async function loop(){
   while(true){
-    await typeText(line1,text1);
-    await typeText(line2,text2Prefix);
+    await typeText(line1,text1,true);
+    await typeText(line2,text2Prefix,false);
     startAgeCounter();
-    await new Promise(r=>setTimeout(r,5000)); // hiển thị 5s
+    await new Promise(r=>setTimeout(r,5000));
     line1.style.opacity=0;
     line2.style.opacity=0;
-    await new Promise(r=>setTimeout(r,2000)); // fade out
+    await new Promise(r=>setTimeout(r,2000));
   }
 }
 loop();
 </script>
-
 </body>
 </html>
+
