@@ -2,30 +2,49 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<title>Hi + Age Counter</title>
+<title>Leminhnoz informations</title> 
 <style>
-  body{
-    font-family:sans-serif;
-    background:#0f1724;
-    color:#e6eef8;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    height:100vh;
-  }
-  .line{
-    font-size:24px;
-    margin:10px 0;
-    white-space:pre-wrap;
-  }
-  .cursor{
-    display:inline-block;
-    width:8px;
-    background:#60a5fa;
-    animation:blink 1s steps(2,start) infinite;
-  }
-  @keyframes blink{50%{opacity:0}}
+body{
+  font-family:sans-serif;
+  background:#0f1724;
+  color:#e6eef8;
+  overflow:hidden;
+  margin:0;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.line{
+  font-size:24px;
+  margin:10px 0;
+  white-space:pre-wrap;
+  opacity:0;
+  transition: opacity 2s;
+}
+.cursor{
+  display:inline-block;
+  width:8px;
+  background:#60a5fa;
+  animation:blink 1s steps(2,start) infinite;
+}
+@keyframes blink{50%{opacity:0}}
+
+/* Rain letters */
+.rain-letter{
+  position:absolute;
+  color:#60a5fa;
+  font-size:14px;
+  pointer-events:none;
+  user-select:none;
+  animation-name:fall;
+  animation-timing-function:linear;
+}
+@keyframes fall{
+  0% { transform:translateY(-20px);}
+  100% { transform:translateY(110vh);}
+}
 </style>
 </head>
 <body>
@@ -38,15 +57,15 @@ const text1 = "Hi ! My full name is Nguyen Duc Le Minh in Vietnamese";
 const text2Prefix = "My age: ";
 const line1 = document.getElementById("line1");
 const line2 = document.getElementById("line2");
-
 const TYPE_SPEED = 40;
 
 function typeText(element, text){
   return new Promise(resolve=>{
     let i=0;
+    element.style.opacity=1;
     function step(){
       if(i<=text.length){
-        element.textContent = text.slice(0,i);
+        element.textContent=text.slice(0,i);
         i++;
         setTimeout(step, TYPE_SPEED);
       } else resolve();
@@ -55,20 +74,16 @@ function typeText(element, text){
   });
 }
 
-// ---- Age counter ----
-const origin = new Date(2011,1,2,0,0,0,0); // 02/02/2011
+const origin = new Date(2011,1,2,0,0,0,0);
 function pad(n,len=2){return String(n).padStart(len,'0');}
-
 function computeAgeComponents(start, now){
   let years=0, months=0;
   let cursor=new Date(start);
   while(new Date(cursor.getFullYear()+1,cursor.getMonth(),cursor.getDate())<=now){
-    cursor.setFullYear(cursor.getFullYear()+1);
-    years++;
+    cursor.setFullYear(cursor.getFullYear()+1); years++;
   }
   while(new Date(cursor.getFullYear(),cursor.getMonth()+1,cursor.getDate())<=now){
-    cursor.setMonth(cursor.getMonth()+1);
-    months++;
+    cursor.setMonth(cursor.getMonth()+1); months++;
   }
   let remaining = now - cursor;
   const ms = remaining%1000;
@@ -94,12 +109,32 @@ function startAgeCounter(){
   requestAnimationFrame(tick);
 }
 
-// ---- Kickoff ----
-(async function(){
-  await typeText(line1,text1);
-  await typeText(line2,text2Prefix);
-  startAgeCounter();
-})();
+// ---- Rain letters ----
+function spawnLetter(){
+  const letter=document.createElement('div');
+  letter.className='rain-letter';
+  letter.textContent=String.fromCharCode(33+Math.floor(Math.random()*94));
+  letter.style.left=Math.random()*100+'vw';
+  letter.style.fontSize=(10+Math.random()*20)+'px';
+  letter.style.animationDuration=(3+Math.random()*5)+'s';
+  document.body.appendChild(letter);
+  setTimeout(()=>letter.remove(),8000);
+}
+setInterval(spawnLetter,50);
+
+// ---- Loop typewriter + fade ----
+async function loop(){
+  while(true){
+    await typeText(line1,text1);
+    await typeText(line2,text2Prefix);
+    startAgeCounter();
+    await new Promise(r=>setTimeout(r,5000)); // hiển thị 5s
+    line1.style.opacity=0;
+    line2.style.opacity=0;
+    await new Promise(r=>setTimeout(r,2000)); // fade out
+  }
+}
+loop();
 </script>
 
 </body>
