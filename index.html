@@ -1,227 +1,106 @@
 <!doctype html>
 <html lang="vi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Sublime Type + Live Age Counter</title>
+<meta charset="utf-8">
+<title>Hi + Age Counter</title>
 <style>
-  :root{
-    --bg:#0f1724;
-    --card:#0b1220;
-    --accent:#60a5fa;
-    --text:#e6eef8;
-    --muted:#9fb4d6;
-  }
-  html,body{height:100%}
   body{
-    margin:0;
-    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    background:linear-gradient(180deg,#071025 0%,var(--bg) 100%);
+    font-family:sans-serif;
+    background:#0f1724;
+    color:#e6eef8;
     display:flex;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
-    color:var(--text);
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-  }
-  .card{
-    width:min(880px,94%);
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-radius:12px;
-    padding:28px;
-    box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.04);
-  }
-  h1{
-    margin:0 0 12px 0;
-    font-size:20px;
-    color:var(--accent);
-    letter-spacing:0.6px;
+    height:100vh;
   }
   .line{
-    font-size:20px;
-    margin:14px 0;
-    color:var(--text);
-    line-height:1.4;
-    display:flex;
-    gap:8px;
-    align-items:flex-end;
-  }
-  .typed {
+    font-size:24px;
+    margin:10px 0;
     white-space:pre-wrap;
-    min-height:1.4em;
   }
-  .cursor {
-    width:8px;
-    height:1.2em;
-    background:var(--accent);
+  .cursor{
     display:inline-block;
-    margin-left:6px;
-    border-radius:2px;
-    animation: blink 1s steps(2,start) infinite;
-    vertical-align:middle;
+    width:8px;
+    background:#60a5fa;
+    animation:blink 1s steps(2,start) infinite;
   }
   @keyframes blink{50%{opacity:0}}
-  .muted { color:var(--muted); font-size:14px; margin-top:8px; }
-  .age{
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
-    color:#dff3ff;
-    background: linear-gradient(90deg, rgba(96,165,250,0.06), rgba(96,165,250,0.03));
-    padding:10px 12px;
-    border-radius:8px;
-    display:inline-block;
-    min-width:340px;
-    text-align:left;
-  }
-  .age .numbers { font-weight:700; color:#c7f0ff; }
-  .small { font-size:13px; color:var(--muted); margin-top:6px; }
-  @media (max-width:640px){
-    .line{font-size:18px}
-    .age{min-width:unset; width:100%}
-  }
 </style>
 </head>
 <body>
-  <div class="card" role="main">
-    <h1>Typewriter + Live Age Counter</h1>
 
-    <!-- Dòng 1: xuất hiện từ từ (the text you marked) -->
-    <div class="line">
-      <div id="line1" class="typed"></div>
-      <div class="cursor" aria-hidden="true"></div>
-    </div>
-
-    <!-- Dòng 2: "My age: ..." - phần chữ xuất hiện từ từ, phần số cập nhật mỗi ms -->
-    <div class="line">
-      <div id="ageLine" class="typed"></div>
-      <div class="cursor" aria-hidden="true"></div>
-    </div>
-
-    <div class="muted">
-      <div>Source time origin: <strong>02/02/2011 00:00:00 (local machine timezone)</strong></div>
-      <div class="small">Lưu ý: số liệu năm/tháng/ngày được tính theo lịch (tức là một "tháng" là từ 1 ngày cùng ngày trong tháng trước đến cùng ngày trong tháng sau...), và số milisecond cập nhật gần như liên tục (một số trình duyệt giới hạn tần số setInterval khi tab background).</div>
-    </div>
-
-    <div style="height:10px"></div>
-
-    <div class="age" id="ageBox" aria-live="polite">
-      <div><span id="ageDisplay" class="numbers">0 years 0 months 0 days 0:0:0.000</span></div>
-      <div class="small">years / months / days / hours:minutes:seconds.milliseconds</div>
-    </div>
-  </div>
+<div class="line" id="line1"></div><div class="cursor"></div>
+<div class="line" id="line2"></div><div class="cursor"></div>
 
 <script>
-/*
-  Behavior:
-  - Type out two underscored texts (first and "My age:" prefix).
-  - After "My age:" typed, start live age counter that updates each millisecond (as close as possible).
-  - Age base: local date 2011-02-02 00:00:00 (constructed via new Date(2011,1,2,...)).
-*/
-
-// Texts (the parts you wanted to appear gradually; put content between underscores)
 const text1 = "Hi ! My full name is Nguyen Duc Le Minh in Vietnamese";
-const agePrefix = "My age: "; // this prefix will be typed then numbers update live
+const text2Prefix = "My age: ";
+const line1 = document.getElementById("line1");
+const line2 = document.getElementById("line2");
 
-// DOM
-const line1 = document.getElementById('line1');
-const ageLine = document.getElementById('ageLine');
-const ageDisplay = document.getElementById('ageDisplay');
+const TYPE_SPEED = 40;
 
-// Typewriter config
-const TYPE_SPEED = 40; // ms per character (adjust slower/faster)
-const PAUSE_BETWEEN = 250; // ms pause between lines
-
-function typeText(element, text, speed=TYPE_SPEED){
-  return new Promise(resolve => {
-    let i = 0;
+function typeText(element, text){
+  return new Promise(resolve=>{
+    let i=0;
     function step(){
-      if(i <= text.length){
+      if(i<=text.length){
         element.textContent = text.slice(0,i);
         i++;
-        setTimeout(step, speed);
-      } else {
-        resolve();
-      }
+        setTimeout(step, TYPE_SPEED);
+      } else resolve();
     }
     step();
   });
 }
 
-// ---------- Age calculation helpers ----------
-function addYears(dt, y){
-  const d = new Date(dt);
-  d.setFullYear(d.getFullYear() + y);
-  return d;
-}
-function addMonths(dt, m){
-  const d = new Date(dt);
-  d.setMonth(d.getMonth() + m);
-  return d;
-}
+// ---- Age counter ----
+const origin = new Date(2011,1,2,0,0,0,0); // 02/02/2011
+function pad(n,len=2){return String(n).padStart(len,'0');}
 
-// compute precise years, months, days, hours, minutes, seconds, ms difference
 function computeAgeComponents(start, now){
-  // ensure copy
-  let years = 0, months = 0;
-  let cursor = new Date(start);
-
-  // years
-  while (addYears(cursor, 1) <= now) {
-    cursor = addYears(cursor, 1);
+  let years=0, months=0;
+  let cursor=new Date(start);
+  while(new Date(cursor.getFullYear()+1,cursor.getMonth(),cursor.getDate())<=now){
+    cursor.setFullYear(cursor.getFullYear()+1);
     years++;
   }
-  // months
-  while (addMonths(cursor, 1) <= now) {
-    cursor = addMonths(cursor, 1);
+  while(new Date(cursor.getFullYear(),cursor.getMonth()+1,cursor.getDate())<=now){
+    cursor.setMonth(cursor.getMonth()+1);
     months++;
   }
-  // remaining ms
-  let remaining = now - cursor; // ms
-  const ms = remaining % 1000;
-  remaining = Math.floor(remaining / 1000);
-  const seconds = remaining % 60;
-  remaining = Math.floor(remaining / 60);
-  const minutes = remaining % 60;
-  remaining = Math.floor(remaining / 60);
-  const hours = remaining % 24;
-  const days = Math.floor((now - addMonths(addYears(start, years), months)) / (24*3600*1000));
-
-  return { years, months, days, hours, minutes, seconds, ms };
+  let remaining = now - cursor;
+  const ms = remaining%1000;
+  remaining=Math.floor(remaining/1000);
+  const seconds=remaining%60;
+  remaining=Math.floor(remaining/60);
+  const minutes=remaining%60;
+  remaining=Math.floor(remaining/60);
+  const hours=remaining%24;
+  const days=Math.floor((now - new Date(cursor.getFullYear(),cursor.getMonth(),cursor.getDate()))/(24*3600*1000));
+  return {years,months,days,hours,minutes,seconds,ms};
 }
 
-// Format helper
-function pad(n, len=2){ return String(n).padStart(len,'0'); }
-
-// ---------- Live update ----------
-const origin = new Date(2011, 1, 2, 0,0,0,0); // months are 0-indexed: 1 -> February
-
-let liveTimer = null;
-function startLiveAge(){
-  if(liveTimer) return;
+function startAgeCounter(){
+  const displayLine=document.getElementById("line2");
   function tick(){
     const now = new Date();
-    const c = computeAgeComponents(origin, now);
-    // display like: "Y years M months D days H:MM:SS.mmm"
-    const timePart = `${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;
-    ageDisplay.textContent = `${c.years} years ${c.months} months ${c.days} days ${timePart}`;
-    // schedule next - use requestAnimationFrame for smoothness
-    liveTimer = requestAnimationFrame(tick);
+    const c=computeAgeComponents(origin,now);
+    const timePart=`${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;
+    displayLine.textContent=text2Prefix+`${c.years} years ${c.months} months ${c.days} days ${timePart}`;
+    requestAnimationFrame(tick);
   }
-  liveTimer = requestAnimationFrame(tick);
+  requestAnimationFrame(tick);
 }
 
-// ---------- Kickoff sequence ----------
-(async function init(){
-  // type first line
-  await typeText(line1, text1);
-  await new Promise(r => setTimeout(r, PAUSE_BETWEEN));
-  // type age prefix
-  await typeText(ageLine, agePrefix);
-  // put a placeholder for numbers initially
-  ageDisplay.textContent = "0 years 0 months 0 days 0:00:00.000";
-  // start updating live numbers
-  startLiveAge();
+// ---- Kickoff ----
+(async function(){
+  await typeText(line1,text1);
+  await typeText(line2,text2Prefix);
+  startAgeCounter();
 })();
 </script>
+
 </body>
 </html>
