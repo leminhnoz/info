@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Leminhnoz Informations</title>
+<title>Hello world !</title>
 <style>
 body{
   margin:0;
@@ -12,182 +12,183 @@ body{
   background:#0f1724;
   color:#e6eef8;
   font-family:sans-serif;
-  cursor:none; /* ẩn cursor mặc định */
+  cursor:none;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
 }
+#textContainer{
+  position:relative;
+  z-index:10;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
 .line{
   font-size:24px;
-  margin:10px 0;
-  white-space:pre-wrap;
+  margin:5px 0;
+  white-space:pre;
   opacity:0;
   transition: opacity 1s;
 }
-.trail{
+canvas{
   position:absolute;
-  width:10px;
-  height:10px;
-  background:#60a5fa;
-  border-radius:50%;
-  pointer-events:none;
-  mix-blend-mode:screen;
-  opacity:0.8;
-  transform:translate(-50%,-50%);
-}
-.rain-letter{
-  position:absolute;
-  color:#60a5fa;
-  font-size:14px;
-  pointer-events:none;
-  user-select:none;
-  animation-name:fall;
-  animation-timing-function:linear;
-  opacity:0.6;
-}
-@keyframes fall{
-  0% { transform:translateY(-20px); opacity:0.6;}
-  100% { transform:translateY(110vh); opacity:0;}
-}
-.cursor-char{
-  position:absolute;
-  color:#60a5fa;
-  font-weight:bold;
-  font-size:24px;
-  user-select:none;
+  top:0; left:0;
 }
 </style>
 </head>
 <body>
-
-<div class="line" id="line1"></div>
-<div class="line" id="line2"></div>
-<div id="cursor" class="cursor-char">{}</div>
+<canvas id="canvas"></canvas>
+<div id="textContainer">
+  <div class="line" id="line1"></div>
+  <div class="line" id="line2"></div>
+</div>
 
 <audio id="keySound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
 <script>
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+let cw, ch;
+function resize(){ cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; }
+window.addEventListener('resize',resize);
+resize();
+
+// --- Cursor trail ---
+const cursor={x:cw/2,y:ch/2};
+const trailCount=20;
+const trails=[];
+for(let i=0;i<trailCount;i++) trails.push({x:cursor.x,y:cursor.y});
+
+// --- Rain letters ---
+const rainLetters=[];
+function spawnLetter(){
+  const l={
+    x: Math.random()*cw,
+    y: -20,
+    speed: 1+Math.random()*3,
+    char: String.fromCharCode(33+Math.floor(Math.random()*94)),
+    fontSize: 10+Math.random()*20,
+    opacity: 0.4+Math.random()*0.4
+  };
+  rainLetters.push(l);
+}
+setInterval(spawnLetter,50);
+
+// --- Text typewriter ---
 const line1=document.getElementById('line1');
 const line2=document.getElementById('line2');
-const cursorEl=document.getElementById('cursor');
 const keySound=document.getElementById('keySound');
-
-const text1 = "Hi ! My full name is Nguyen Duc Le Minh in Vietnamese";
-const text2Prefix = "My age: ";
+const text1="Hi ! My full name is Nguyen Duc Le Minh in Vietnamese";
+const text2Prefix="My age: ";
 const TYPE_SPEED=50;
 
 function playKey(){ keySound.currentTime=0; keySound.play().catch(()=>{}); }
 
-async function typeText(element, text, deleteAfter=false){
+async function typeText(element,text){
   element.style.opacity=1;
   for(let i=0;i<=text.length;i++){
     element.textContent=text.slice(0,i);
     playKey();
     await new Promise(r=>setTimeout(r,TYPE_SPEED));
   }
-  if(deleteAfter){
-    await new Promise(r=>setTimeout(r,1000));
-    for(let i=text.length;i>=0;i--){
-      element.textContent=text.slice(0,i);
-      await new Promise(r=>setTimeout(r,TYPE_SPEED/2));
-    }
+}
+
+async function deleteText(element){
+  for(let i=element.textContent.length;i>=0;i--){
+    element.textContent=element.textContent.slice(0,i);
+    await new Promise(r=>setTimeout(r,TYPE_SPEED/2));
   }
 }
 
-// ---- Age counter ----
+// --- Age counter ---
 const origin=new Date(2011,1,2,0,0,0,0);
 function pad(n,len=2){return String(n).padStart(len,'0');}
 function computeAgeComponents(start, now){
   let years=0, months=0;
-  let cursor=new Date(start);
-  while(new Date(cursor.getFullYear()+1,cursor.getMonth(),cursor.getDate())<=now){
-    cursor.setFullYear(cursor.getFullYear()+1); years++;
+  let cursorDate=new Date(start);
+  while(new Date(cursorDate.getFullYear()+1,cursorDate.getMonth(),cursorDate.getDate())<=now){
+    cursorDate.setFullYear(cursorDate.getFullYear()+1); years++;
   }
-  while(new Date(cursor.getFullYear(),cursor.getMonth()+1,cursor.getDate())<=now){
-    cursor.setMonth(cursor.getMonth()+1); months++;
+  while(new Date(cursorDate.getFullYear(),cursorDate.getMonth()+1,cursorDate.getDate())<=now){
+    cursorDate.setMonth(cursorDate.getMonth()+1); months++;
   }
-  let remaining = now - cursor;
-  const ms = remaining%1000;
+  let remaining=now-cursorDate;
+  const ms=remaining%1000;
   remaining=Math.floor(remaining/1000);
   const seconds=remaining%60;
   remaining=Math.floor(remaining/60);
   const minutes=remaining%60;
   remaining=Math.floor(remaining/60);
   const hours=remaining%24;
-  const days=Math.floor((now - new Date(cursor.getFullYear(),cursor.getMonth(),cursor.getDate()))/(24*3600*1000));
+  const days=Math.floor((now-new Date(cursorDate.getFullYear(),cursorDate.getMonth(),cursorDate.getDate()))/(24*3600*1000));
   return {years,months,days,hours,minutes,seconds,ms};
 }
 
-function startAgeCounter(){
-  const displayLine=line2;
-  function tick(){
-    const now=new Date();
-    const c=computeAgeComponents(origin,now);
-    const timePart=`${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;
-    displayLine.textContent=text2Prefix+`${c.years}y ${c.months}m ${c.days}d ${timePart}`;
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
+function formatAge(){
+  const now=new Date();
+  const c=computeAgeComponents(origin,now);
+  return `${c.years}y ${c.months}m ${c.days}d ${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;
 }
 
-// ---- Rain letters ----
-function spawnLetter(){
-  const letter=document.createElement('div');
-  letter.className='rain-letter';
-  letter.textContent=String.fromCharCode(33+Math.floor(Math.random()*94));
-  letter.style.left=Math.random()*100+'vw';
-  letter.style.fontSize=(10+Math.random()*20)+'px';
-  letter.style.animationDuration=(3+Math.random()*5)+'s';
-  document.body.appendChild(letter);
-  setTimeout(()=>letter.remove(),8000);
-}
-setInterval(spawnLetter,50);
-
-// ---- Cursor trail ----
-const trailCount=15;
-const trails=[];
-for(let i=0;i<trailCount;i++){
-  const div=document.createElement('div');
-  div.className='trail';
-  document.body.appendChild(div);
-  trails.push({el:div,x:window.innerWidth/2,y:window.innerHeight/2});
-}
-
+// --- Cursor movement ---
 document.addEventListener('mousemove',e=>{
-  trails[0].x=e.clientX;
-  trails[0].y=e.clientY;
-  cursorEl.style.left=e.clientX+'px';
-  cursorEl.style.top=e.clientY+'px';
+  cursor.x=e.clientX;
+  cursor.y=e.clientY;
 });
 
-function animateTrails(){
-  for(let i=1;i<trails.length;i++){
-    trails[i].x += (trails[i-1].x - trails[i].x)*0.2;
-    trails[i].y += (trails[i-1].y - trails[i].y)*0.2;
-  }
-  trails.forEach(t=>{
-    t.el.style.left=t.x+'px';
-    t.el.style.top=t.y+'px';
-  });
-  requestAnimationFrame(animateTrails);
-}
-animateTrails();
+// --- Animation loop ---
+function animate(){
+  ctx.clearRect(0,0,cw,ch);
 
-// ---- Loop typewriter + fade + delete ----
+  // Rain letters
+  for(let i=rainLetters.length-1;i>=0;i--){
+    const l=rainLetters[i];
+    l.y+=l.speed;
+    ctx.globalAlpha=l.opacity;
+    ctx.font=`${l.fontSize}px monospace`;
+    ctx.fillStyle="#60a5fa";
+    ctx.fillText(l.char,l.x,l.y);
+    if(l.y>ch) rainLetters.splice(i,1);
+  }
+  ctx.globalAlpha=1;
+
+  // Cursor trail
+  for(let i=trails.length-1;i>=0;i--){
+    const t=trails[i];
+    t.x += (i===0?cursor.x:trails[i-1].x-t.x)*0.2;
+    t.y += (i===0?cursor.y:trails[i-1].y-t.y)*0.2;
+    ctx.fillStyle=`rgba(96,165,250,${(trailCount-i)/trailCount})`;
+    ctx.beginPath();
+    ctx.arc(t.x,t.y,5,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  // Cursor {}
+  ctx.fillStyle="#60a5fa";
+  ctx.font="24px monospace";
+  ctx.fillText("{}",cursor.x-8,cursor.y+8);
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+// --- Loop typewriter ---
 async function loop(){
   while(true){
-    await typeText(line1,text1,true);
-    await typeText(line2,text2Prefix,false);
-    startAgeCounter();
+    await typeText(line1,text1);
+    await typeText(line2,text2Prefix+formatAge());
     await new Promise(r=>setTimeout(r,5000));
-    line1.style.opacity=0;
-    line2.style.opacity=0;
-    await new Promise(r=>setTimeout(r,2000));
+    await deleteText(line1);
+    await deleteText(line2);
+    await new Promise(r=>setTimeout(r,1000));
   }
 }
 loop();
+
+// --- Update age every frame ---
+setInterval(()=>{line2.textContent=text2Prefix+formatAge();},50);
 </script>
 </body>
 </html>
-
