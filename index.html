@@ -56,25 +56,29 @@ canvas{
   transition: opacity 1s;
 }
 
-/* Buttons nhạt */
-#enterBtn, #sendBtn, #backBtn {
-  margin-top:10px;
-  padding:10px 20px;
-  background:rgba(96,165,250,0.6);
-  color:#0f1724;
-  font-size:18px;
+/* Buttons */
+#enterBtn, #sendBtn, #backBtn{
+  background:rgba(96,165,250,0.6); /* nhạt */
   border:none;
   border-radius:8px;
   cursor:pointer;
-  opacity:0;
-  transition: all 0.5s ease;
   font-weight:bold;
+  transition:background 0.3s;
 }
 #enterBtn:hover, #sendBtn:hover, #backBtn:hover{
   background:rgba(96,165,250,0.85);
 }
 
-/* Slide2 comment */
+/* Slide 1 button */
+#enterBtn{
+  margin-top:25px;
+  padding:12px 28px;
+  font-size:20px;
+  color:#0f1724;
+  opacity:0; /* ẩn lúc typewriter */
+}
+
+/* Slide 2 comment */
 #slide2 h1{
   margin-bottom:20px;
   z-index:10;
@@ -109,6 +113,21 @@ canvas{
   background:#0b111b;
   color:white;
   z-index:10;
+}
+#sendBtn{
+  padding:10px 20px;
+  margin-top:10px;
+  z-index:10;
+}
+
+/* Back button */
+#backBtn{
+  position:absolute;
+  top:20px;
+  left:20px;
+  padding:10px 20px;
+  z-index:10;
+  opacity:1;
 }
 
 /* VIEW ICON */
@@ -187,9 +206,7 @@ document.getElementById("view2Count").innerText = views;
 function loadComments(){
   let box = document.getElementById("commentsBox");
   box.innerHTML = "";
-
   let list = JSON.parse(localStorage.getItem("comments") || "[]");
-
   list.forEach(c => {
     let div = document.createElement("div");
     div.style.marginBottom = "12px";
@@ -204,11 +221,9 @@ document.getElementById("sendBtn").onclick = () => {
   let name = document.getElementById("username").value.trim();
   let text = document.getElementById("newComment").value.trim();
   if(!name || !text) return;
-
   let list = JSON.parse(localStorage.getItem("comments") || "[]");
   list.push({name, text});
   localStorage.setItem("comments", JSON.stringify(list));
-
   document.getElementById("newComment").value = "";
   loadComments();
 };
@@ -223,13 +238,12 @@ document.getElementById("backBtn").onclick = () => {
 /* =========================================================
    🎯 SLIDE SWITCH
 ========================================================= */
-const enterBtn = document.getElementById("enterBtn");
-enterBtn.addEventListener("click", () => {
+document.getElementById("enterBtn").addEventListener("click", () => {
   document.getElementById("slidesWrapper").style.transform="translateX(-100vw)";
 });
 
 /* =========================================================
-   🎯 CANVAS ANIMATION + CURSOR TRAIL SOFT + GLOW + { } CURSOR
+   🎯 CANVAS ANIMATION + CURSOR TRAIL SOFT + GLOW
 ========================================================= */
 function initCanvas(canvas){
   const ctx = canvas.getContext('2d');
@@ -274,9 +288,8 @@ function initCanvas(canvas){
       ctx.fillText(l.char,l.x,l.y);
       if(l.y>ch) rainLetters.splice(i,1);
     }
-    ctx.globalAlpha = 1;
 
-    // Trail mềm + glow
+    // Cursor trail soft
     for(let i=trails.length-1;i>=0;i--){
       const t=trails[i];
       t.x += (i===0?cursor.x:trails[i-1].x-t.x)*0.2;
@@ -291,11 +304,9 @@ function initCanvas(canvas){
       }
     }
 
-    // Cursor chính `{}` tại chuột
-    ctx.shadowBlur = 6;
-    ctx.shadowColor = "#60a5fa";
-    ctx.fillStyle = "#60a5fa";
-    ctx.font = "24px monospace";
+    // Cursor {}
+    ctx.fillStyle="rgba(96,165,250,0.9)";
+    ctx.font="24px monospace";
     ctx.fillText("{}", cursor.x-8, cursor.y+8);
 
     requestAnimationFrame(animate);
@@ -387,3 +398,4 @@ setInterval(()=>{line2.textContent=text2Prefix+formatAge();},50);
 </script>
 </body>
 </html>
+
