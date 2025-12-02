@@ -13,11 +13,34 @@ body{
   color:#e6eef8;
   font-family:sans-serif;
   cursor:none;
+}
+
+/* ------ ADDED: SLIDES WRAPPER ------ */
+#slidesWrapper{
+  width:200vw;
+  height:100vh;
+  display:flex;
+  transition:transform 1s ease;
+}
+
+/* Intro slide */
+#slide1, #slide2 {
+  width:100vw;
+  height:100vh;
+  position:relative;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
 }
+
+/* Canvas chỉ ở slide 1 */
+canvas{
+  position:absolute;
+  top:0; left:0;
+}
+
+/* Text intro */
 #textContainer{
   position:relative;
   z-index:10;
@@ -32,22 +55,67 @@ body{
   opacity:0;
   transition: opacity 1s;
 }
-canvas{
-  position:absolute;
-  top:0; left:0;
+
+/* ADDED: Button */
+#enterBtn{
+  margin-top:25px;
+  padding:12px 28px;
+  background:#60a5fa;
+  color:#0f1724;
+  font-size:20px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  opacity:0;
+  transition:opacity 1s;
+  font-weight:bold;
+}
+#enterBtn:hover{
+  background:#93c5fd;
+}
+
+/* Slide 2 text area */
+#slide2 textarea{
+  width:80%;
+  height:60%;
+  background:#0b111b;
+  color:#e6eef8;
+  border:2px solid #60a5fa;
+  padding:15px;
+  font-size:18px;
+  resize:none;
+  outline:none;
+  border-radius:10px;
 }
 </style>
 </head>
 <body>
-<canvas id="canvas"></canvas>
-<div id="textContainer">
-  <div class="line" id="line1"></div>
-  <div class="line" id="line2"></div>
+
+<!-- WRAPPER FOR 2 SLIDES -->
+<div id="slidesWrapper">
+
+  <!-- SLIDE 1 -->
+  <div id="slide1">
+    <canvas id="canvas"></canvas>
+    <div id="textContainer">
+        <div class="line" id="line1"></div>
+        <div class="line" id="line2"></div>
+        <button id="enterBtn">Click to enter</button> <!-- ADDED BUTTON -->
+    </div>
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div id="slide2">
+    <h1 style="margin-bottom:20px;">Your Slide</h1>
+    <textarea placeholder="Write anything you want here..."></textarea>
+  </div>
+
 </div>
 
 <audio id="keySound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
 <script>
+// ---------- ORIGINAL CODE ----------
 const canvas=document.getElementById('canvas');
 const ctx=canvas.getContext('2d');
 let cw, ch;
@@ -55,13 +123,13 @@ function resize(){ cw=canvas.width=window.innerWidth; ch=canvas.height=window.in
 window.addEventListener('resize',resize);
 resize();
 
-// --- Cursor trail ---
+// Cursor
 const cursor={x:cw/2,y:ch/2};
 const trailCount=20;
 const trails=[];
 for(let i=0;i<trailCount;i++) trails.push({x:cursor.x,y:cursor.y});
 
-// --- Rain letters ---
+// Rain letters
 const rainLetters=[];
 function spawnLetter(){
   const l={
@@ -76,7 +144,8 @@ function spawnLetter(){
 }
 setInterval(spawnLetter,50);
 
-// --- Text typewriter ---
+
+
 const line1=document.getElementById('line1');
 const line2=document.getElementById('line2');
 const keySound=document.getElementById('keySound');
@@ -102,7 +171,7 @@ async function deleteText(element){
   }
 }
 
-// --- Age counter ---
+// Age counter
 const origin=new Date(2011,1,2,0,0,0,0);
 function pad(n,len=2){return String(n).padStart(len,'0');}
 function computeAgeComponents(start, now){
@@ -132,17 +201,14 @@ function formatAge(){
   return `${c.years}y ${c.months}m ${c.days}d ${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;
 }
 
-// --- Cursor movement ---
 document.addEventListener('mousemove',e=>{
   cursor.x=e.clientX;
   cursor.y=e.clientY;
 });
 
-// --- Animation loop ---
 function animate(){
   ctx.clearRect(0,0,cw,ch);
 
-  // Rain letters
   for(let i=rainLetters.length-1;i>=0;i--){
     const l=rainLetters[i];
     l.y+=l.speed;
@@ -154,7 +220,6 @@ function animate(){
   }
   ctx.globalAlpha=1;
 
-  // Cursor trail
   for(let i=trails.length-1;i>=0;i--){
     const t=trails[i];
     t.x += (i===0?cursor.x:trails[i-1].x-t.x)*0.2;
@@ -165,7 +230,6 @@ function animate(){
     ctx.fill();
   }
 
-  // Cursor {}
   ctx.fillStyle="#60a5fa";
   ctx.font="24px monospace";
   ctx.fillText("{}",cursor.x-8,cursor.y+8);
@@ -174,12 +238,22 @@ function animate(){
 }
 animate();
 
-// --- Loop typewriter ---
+
+// ---------- TYPEWRITER + SHOW BUTTON ----------
+const enterBtn = document.getElementById("enterBtn");
+
 async function loop(){
   while(true){
     await typeText(line1,text1);
     await typeText(line2,text2Prefix+formatAge());
+
+    // Hiện nút khi text xong
+    enterBtn.style.opacity = 1;
+
     await new Promise(r=>setTimeout(r,5000));
+
+    enterBtn.style.opacity = 0;
+
     await deleteText(line1);
     await deleteText(line2);
     await new Promise(r=>setTimeout(r,1000));
@@ -187,8 +261,13 @@ async function loop(){
 }
 loop();
 
-// --- Update age every frame ---
 setInterval(()=>{line2.textContent=text2Prefix+formatAge();},50);
+
+
+// ---------- ADDED: BUTTON CLICK → MOVE TO SLIDE 2 ----------
+enterBtn.addEventListener("click", () => {
+  document.getElementById("slidesWrapper").style.transform = "translateX(-100vw)";
+});
 </script>
 </body>
 </html>
