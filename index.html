@@ -15,7 +15,7 @@ body{
   cursor:none;
 }
 
-/* SLIDES */
+/* Slides */
 #slidesWrapper{
   width:200vw;
   height:100vh;
@@ -37,6 +37,7 @@ body{
 canvas{
   position:absolute;
   top:0; left:0;
+  z-index:0;
 }
 
 /* Intro text */
@@ -73,9 +74,10 @@ canvas{
   background:#93c5fd;
 }
 
-/* Slide 2 */
+/* Slide2 comment */
 #slide2 h1{
   margin-bottom:20px;
+  z-index:10;
 }
 #commentsBox{
   width:70%;
@@ -85,6 +87,8 @@ canvas{
   border-radius:10px;
   border:2px solid #60a5fa;
   overflow-y:auto;
+  z-index:10;
+  position:relative;
 }
 #newComment{
   width:70%;
@@ -93,6 +97,7 @@ canvas{
   border:2px solid #60a5fa;
   background:#0b111b;
   color:white;
+  z-index:10;
 }
 #username{
   width:200px;
@@ -103,6 +108,7 @@ canvas{
   border:2px solid #60a5fa;
   background:#0b111b;
   color:white;
+  z-index:10;
 }
 #sendBtn{
   padding:10px 20px;
@@ -112,6 +118,7 @@ canvas{
   font-weight:bold;
   border-radius:8px;
   cursor:pointer;
+  z-index:10;
 }
 #sendBtn:hover{
   background:#93c5fd;
@@ -127,6 +134,7 @@ canvas{
   font-weight:bold;
   border-radius:8px;
   cursor:pointer;
+  z-index:10;
 }
 #backBtn:hover{
   background:#93c5fd;
@@ -141,32 +149,13 @@ canvas{
   align-items:center;
   justify-content:center;
   cursor:pointer;
+  z-index:10;
+  font-weight:bold;
 }
-
 .viewBox img{
-  width:35px;
-  transition:0.2s;
+  width:30px;
+  margin-right:5px;
 }
-
-.viewCount{
-  opacity:0;
-  position:absolute;
-  right:40px;
-  padding:6px 12px;
-  background:#1e293b;
-  color:#e6eef8;
-  border-radius:6px;
-  font-size:14px;
-  pointer-events:none;
-  transition:0.2s ease;
-  transform:translateY(-4px);
-}
-
-/* Hover show bubble */
-.viewBox:hover .viewCount{
-  opacity:1;
-}
-
 </style>
 </head>
 <body>
@@ -176,39 +165,30 @@ canvas{
   <!-- SLIDE 1 -->
   <div id="slide1">
     <canvas id="canvas"></canvas>
-
-    <!-- VIEWS ICON -->
     <div class="viewBox" id="view1Box">
       <img src="https://cdn-icons-png.flaticon.com/512/709/709612.png">
-      <div class="viewCount" id="view1Count"></div>
+      <span id="view1Count"></span>
     </div>
-
     <div id="textContainer">
         <div class="line" id="line1"></div>
         <div class="line" id="line2"></div>
-        <button id="enterBtn">Coding here</button>
+        <button id="enterBtn">Comment</button>
     </div>
   </div>
 
   <!-- SLIDE 2 -->
   <div id="slide2">
-
-    <button id="backBtn">Back</button>
-
-    <!-- VIEWS ICON -->
+    <canvas id="canvas2"></canvas>
     <div class="viewBox" id="view2Box">
       <img src="https://cdn-icons-png.flaticon.com/512/709/709612.png">
-      <div class="viewCount" id="view2Count"></div>
+      <span id="view2Count"></span>
     </div>
-
+    <button id="backBtn">Back</button>
     <h1>Comments</h1>
-
     <div id="commentsBox"></div>
-
     <input id="username" placeholder="Your name...">
     <textarea id="newComment" placeholder="Write a comment..."></textarea>
     <button id="sendBtn">Send</button>
-
   </div>
 
 </div>
@@ -219,7 +199,6 @@ canvas{
 /* =========================================================
    🎯 VIEW COUNTER
 ========================================================= */
-
 if(!localStorage.getItem("profileViews")){
   localStorage.setItem("profileViews", 1);
 }else{
@@ -227,15 +206,13 @@ if(!localStorage.getItem("profileViews")){
     parseInt(localStorage.getItem("profileViews")) + 1
   );
 }
-
 let views = localStorage.getItem("profileViews");
-document.getElementById("view1Count").innerText = views + " views";
-document.getElementById("view2Count").innerText = views + " views";
+document.getElementById("view1Count").innerText = views;
+document.getElementById("view2Count").innerText = views;
 
 /* =========================================================
    🎯 COMMENT SYSTEM
 ========================================================= */
-
 function loadComments(){
   let box = document.getElementById("commentsBox");
   box.innerHTML = "";
@@ -245,11 +222,11 @@ function loadComments(){
   list.forEach(c => {
     let div = document.createElement("div");
     div.style.marginBottom = "12px";
+    div.style.zIndex="10";
     div.innerHTML = `<b>${c.name}</b>: ${c.text}`;
     box.appendChild(div);
   });
 }
-
 loadComments();
 
 document.getElementById("sendBtn").onclick = () => {
@@ -273,43 +250,101 @@ document.getElementById("backBtn").onclick = () => {
 };
 
 /* =========================================================
-   🎯 ORIGINAL EFFECTS (animation, typewriter...)
+   🎯 SLIDE SWITCH
 ========================================================= */
+const enterBtn = document.getElementById("enterBtn");
+enterBtn.addEventListener("click", () => {
+  document.getElementById("slidesWrapper").style.transform="translateX(-100vw)";
+});
 
-/* Canvas, cursor, rain, typewriter — GIỮ NGUYÊN 100% CODE
-   (tôi chỉ copy từ bản của bạn không chỉnh gì)
-*/
+/* =========================================================
+   🎯 CANVAS ANIMATION + CURSOR TRAIL SOFT + GLOW
+========================================================= */
+function initCanvas(canvas){
+  const ctx = canvas.getContext('2d');
+  let cw = canvas.width = window.innerWidth;
+  let ch = canvas.height = window.innerHeight;
 
-const canvas=document.getElementById('canvas');
-const ctx=canvas.getContext('2d');
-let cw, ch;
-function resize(){ cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight; }
-window.addEventListener('resize',resize);
-resize();
+  const cursor = {x:cw/2, y:ch/2};
+  const trailCount = 25;
+  const trails = [];
+  for(let i=0;i<trailCount;i++) trails.push({x:cursor.x,y:cursor.y});
 
-const cursor={x:cw/2,y:ch/2};
-const trailCount=20;
-const trails=[];
-for(let i=0;i<trailCount;i++) trails.push({x:cursor.x,y:cursor.y});
+  const rainLetters=[];
 
-const rainLetters=[];
-function spawnLetter(){
-  const l={
-    x: Math.random()*cw,
-    y: -20,
-    speed: 1+Math.random()*3,
-    char: String.fromCharCode(33+Math.floor(Math.random()*94)),
-    fontSize: 10+Math.random()*20,
-    opacity: 0.4+Math.random()*0.4
-  };
-  rainLetters.push(l);
+  function spawnLetter(){
+    const l={
+      x: Math.random()*cw,
+      y: -20,
+      speed: 1+Math.random()*3,
+      char: String.fromCharCode(33+Math.floor(Math.random()*94)),
+      fontSize: 10+Math.random()*20,
+      opacity: 0.4+Math.random()*0.4
+    };
+    rainLetters.push(l);
+  }
+  setInterval(spawnLetter,50);
+
+  document.addEventListener('mousemove', e=>{
+    cursor.x=e.clientX;
+    cursor.y=e.clientY;
+  });
+
+  function animate(){
+    ctx.clearRect(0,0,cw,ch);
+
+    // Rain letters
+    for(let i=rainLetters.length-1;i>=0;i--){
+      const l=rainLetters[i];
+      l.y+=l.speed;
+      ctx.globalAlpha=l.opacity;
+      ctx.font=`${l.fontSize}px monospace`;
+      ctx.fillStyle="#60a5fa";
+      ctx.fillText(l.char,l.x,l.y);
+      if(l.y>ch) rainLetters.splice(i,1);
+    }
+
+    // Cursor soft + glow
+    for(let i=trails.length-1;i>=0;i--){
+      const t=trails[i];
+      t.x += (i===0?cursor.x:trails[i-1].x-t.x)*0.2;
+      t.y += (i===0?cursor.y:trails[i-1].y-t.y)*0.2;
+      ctx.strokeStyle=`rgba(96,165,250,${(trailCount-i)/trailCount})`;
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      if(i>0){
+        ctx.moveTo(trails[i-1].x,trails[i-1].y);
+        ctx.lineTo(t.x,t.y);
+        ctx.stroke();
+      }
+    }
+
+    // Glow circle at cursor
+    ctx.fillStyle="rgba(96,165,250,0.7)";
+    ctx.beginPath();
+    ctx.arc(cursor.x,cursor.y,6,0,Math.PI*2);
+    ctx.fill();
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  window.addEventListener('resize', ()=>{
+    cw = canvas.width = window.innerWidth;
+    ch = canvas.height = window.innerHeight;
+  });
 }
-setInterval(spawnLetter,50);
 
+initCanvas(document.getElementById("canvas"));
+initCanvas(document.getElementById("canvas2"));
+
+/* =========================================================
+   🎯 TYPEWRITER
+========================================================= */
 const line1=document.getElementById('line1');
 const line2=document.getElementById('line2');
 const keySound=document.getElementById('keySound');
-const text1="Hi ! My full name is Nguyen Duc Le Minh in Vietnamese";
+const text1="Hi ! My full name is Nguyen Duc Le Minh , and u ?";
 const text2Prefix="My age: ";
 const TYPE_SPEED=50;
 
@@ -331,6 +366,7 @@ async function deleteText(element){
   }
 }
 
+// Age counter
 const origin=new Date(2011,1,2,0,0,0,0);
 function pad(n,len=2){return String(n).padStart(len,'0');}
 function computeAgeComponents(start, now){
@@ -360,70 +396,23 @@ function formatAge(){
   return `${c.years}y ${c.months}m ${c.days}d ${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;
 }
 
-document.addEventListener('mousemove',e=>{
-  cursor.x=e.clientX;
-  cursor.y=e.clientY;
-});
-
-function animate(){
-  ctx.clearRect(0,0,cw,ch);
-
-  for(let i=rainLetters.length-1;i>=0;i--){
-    const l=rainLetters[i];
-    l.y+=l.speed;
-    ctx.globalAlpha=l.opacity;
-    ctx.font=`${l.fontSize}px monospace`;
-    ctx.fillStyle="#60a5fa";
-    ctx.fillText(l.char,l.x,l.y);
-    if(l.y>ch) rainLetters.splice(i,1);
-  }
-  ctx.globalAlpha=1;
-
-  for(let i=trails.length-1;i>=0;i--){
-    const t=trails[i];
-    t.x += (i===0?cursor.x:trails[i-1].x-t.x)*0.2;
-    t.y += (i===0?cursor.y:trails[i-1].y-t.y)*0.2;
-    ctx.fillStyle=`rgba(96,165,250,${(trailCount-i)/trailCount})`;
-    ctx.beginPath();
-    ctx.arc(t.x,t.y,5,0,Math.PI*2);
-    ctx.fill();
-  }
-
-  ctx.fillStyle="#60a5fa";
-  ctx.font="24px monospace";
-  ctx.fillText("{}",cursor.x-8,cursor.y+8);
-
-  requestAnimationFrame(animate);
-}
-animate();
-
-const enterBtn = document.getElementById("enterBtn");
-
 async function loop(){
   while(true){
     await typeText(line1,text1);
     await typeText(line2,text2Prefix+formatAge());
-
-    enterBtn.style.opacity = 1;
-
+    enterBtn.style.opacity=1;
     await new Promise(r=>setTimeout(r,5000));
-
-    enterBtn.style.opacity = 0;
-
+    enterBtn.style.opacity=0;
     await deleteText(line1);
     await deleteText(line2);
     await new Promise(r=>setTimeout(r,1000));
   }
 }
 loop();
-
 setInterval(()=>{line2.textContent=text2Prefix+formatAge();},50);
 
-/* MOVE TO SLIDE 2 */
-enterBtn.addEventListener("click", () => {
-  document.getElementById("slidesWrapper").style.transform = "translateX(-100vw)";
-});
 </script>
 </body>
 </html>
+
 
