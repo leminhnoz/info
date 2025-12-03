@@ -4,19 +4,78 @@
 <meta charset="UTF-8">
 <title>Hello world !</title>
 <style>
-body{margin:0;padding:0;height:100vh;overflow:hidden;background:#0f1724;color:#e6eef8;font-family:sans-serif;cursor:none;}
-#slidesWrapper{width:2100vw;height:100vh;display:flex;transition:transform 1s ease;}
-.slide{width:100vw;height:100vh;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-canvas{position:absolute;top:0;left:0;z-index:0;}
-#textContainer{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;}
-.line{font-size:24px;margin:5px 0;white-space:pre;opacity:0;transition:opacity 1s;}
-button{background:rgba(96,165,250,0.6);border:none;border-radius:8px;cursor:pointer;font-weight:bold;transition:background 0.3s;}
+body{
+  margin:0;
+  padding:0;
+  height:100vh;
+  overflow:hidden;
+  background:#0f1724;
+  color:#e6eef8;
+  font-family:sans-serif;
+  cursor:none;
+}
+
+/* Slides */
+#slidesWrapper{
+  width:2100vw; /* 21 slides */
+  height:100vh;
+  display:flex;
+  transition:transform 0.5s ease;
+}
+
+.slide{
+  width:100vw;
+  height:100vh;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+#textContainer{
+  position:relative;
+  z-index:10;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.line{
+  font-size:24px;
+  margin:5px 0;
+  white-space:pre;
+  opacity:0;
+  transition: opacity 1s;
+}
+
+button{
+  background:rgba(96,165,250,0.6);
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:background 0.3s;
+  z-index:10;
+}
 button:hover{background:rgba(96,165,250,0.85);}
-.backBtn{position:absolute;top:20px;left:20px;padding:10px 20px;z-index:10;}
-.nextBtn{position:absolute;top:20px;right:20px;padding:10px 20px;z-index:10;}
-.quoteBox{position:relative;z-index:10;width:70%;text-align:center;}
-.quoteText{font-size:22px;margin:15px 0;}
-.quoteAuthor{font-weight:bold;}
+.backBtn{position:absolute;top:20px;left:20px;}
+.nextBtn{position:absolute;top:20px;right:20px;}
+
+.quoteBox{
+  position:relative;
+  z-index:10;
+  width:70%;
+  text-align:center;
+}
+.quoteText{
+  font-size:22px;
+  margin:15px 0;
+}
+.cursor{
+  position:absolute;
+  font-size:24px;
+  z-index:10;
+}
 </style>
 </head>
 <body>
@@ -25,12 +84,12 @@ button:hover{background:rgba(96,165,250,0.85);}
 
   <!-- Slide 1 Intro -->
   <div class="slide" id="slide1">
-    <canvas id="canvas"></canvas>
     <div id="textContainer">
       <div class="line" id="line1"></div>
       <div class="line" id="line2"></div>
+      <button id="nextBtn1">Next</button>
     </div>
-    <button id="nextBtn1">Next</button>
+    <div class="cursor" id="cursor">{}</div>
   </div>
 
 </div>
@@ -38,49 +97,16 @@ button:hover{background:rgba(96,165,250,0.85);}
 <audio id="keySound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
 <script>
-// ====================================================
-// Cursor + Rain Letters
-// ====================================================
-function initCanvas(canvas){
-  const ctx = canvas.getContext('2d');
-  let cw = canvas.width = window.innerWidth;
-  let ch = canvas.height = window.innerHeight;
-  const cursor={x:cw/2,y:ch/2};
-  const trailCount=25;
-  const trails=[];
-  for(let i=0;i<trailCount;i++) trails.push({x:cursor.x,y:cursor.y});
-  const rainLetters=[];
-  function spawnLetter(){
-    const l={x:Math.random()*cw,y:-20,speed:1+Math.random()*3,char:String.fromCharCode(33+Math.floor(Math.random()*94)),fontSize:10+Math.random()*20,opacity:0.4+Math.random()*0.4};
-    rainLetters.push(l);
-  }
-  setInterval(spawnLetter,50);
-  document.addEventListener('mousemove', e=>{cursor.x=e.clientX;cursor.y=e.clientY;});
-  function animate(){
-    ctx.clearRect(0,0,cw,ch);
-    for(let i=rainLetters.length-1;i>=0;i--){
-      const l=rainLetters[i]; l.y+=l.speed;
-      ctx.globalAlpha=l.opacity;
-      ctx.font=`${l.fontSize}px monospace`;
-      ctx.fillStyle="#60a5fa"; ctx.fillText(l.char,l.x,l.y);
-      if(l.y>ch) rainLetters.splice(i,1);
-    }
-    for(let i=trails.length-1;i>=0;i--){
-      const t=trails[i]; t.x+=(i===0?cursor.x:trails[i-1].x-t.x)*0.2; t.y+=(i===0?cursor.y:trails[i-1].y-t.y)*0.2;
-      ctx.strokeStyle=`rgba(96,165,250,${(trailCount-i)/trailCount})`; ctx.lineWidth=2; ctx.beginPath();
-      if(i>0){ctx.moveTo(trails[i-1].x,trails[i-1].y);ctx.lineTo(t.x,t.y);ctx.stroke();}
-    }
-    ctx.fillStyle="rgba(96,165,250,0.9)"; ctx.font="24px monospace"; ctx.fillText("{}", cursor.x-8, cursor.y+8);
-    requestAnimationFrame(animate);
-  }
-  animate();
-  window.addEventListener('resize',()=>{cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight;});
-}
-initCanvas(document.getElementById('canvas'));
+const slidesWrapper=document.getElementById('slidesWrapper');
 
-// ====================================================
-// Typewriter Intro
-// ====================================================
+// Cursor follow
+const cursor=document.getElementById('cursor');
+document.addEventListener('mousemove', e=>{
+  cursor.style.left=(e.clientX-8)+'px';
+  cursor.style.top=(e.clientY+8)+'px';
+});
+
+// Typewriter intro
 const line1=document.getElementById('line1');
 const line2=document.getElementById('line2');
 const keySound=document.getElementById('keySound');
@@ -90,10 +116,31 @@ const text2Prefix="My age: ";
 function playKey(){ keySound.currentTime=0; keySound.play().catch(()=>{}); }
 async function typeText(element,text){element.style.opacity=1;for(let i=0;i<=text.length;i++){element.textContent=text.slice(0,i);playKey();await new Promise(r=>setTimeout(r,TYPE_SPEED));}}
 async function deleteText(element){for(let i=element.textContent.length;i>=0;i--){element.textContent=element.textContent.slice(0,i);await new Promise(r=>setTimeout(r,TYPE_SPEED/2));}}
+
 const origin=new Date(2011,1,2,0,0,0,0);
 function pad(n,len=2){return String(n).padStart(len,'0');}
-function computeAgeComponents(start, now){let years=0, months=0;let cursorDate=new Date(start);while(new Date(cursorDate.getFullYear()+1,cursorDate.getMonth(),cursorDate.getDate())<=now){cursorDate.setFullYear(cursorDate.getFullYear()+1); years++;}while(new Date(cursorDate.getFullYear(),cursorDate.getMonth()+1,cursorDate.getDate())<=now){cursorDate.setMonth(cursorDate.getMonth()+1); months++;}let remaining=now-cursorDate;const ms=remaining%1000;remaining=Math.floor(remaining/1000);const seconds=remaining%60;remaining=Math.floor(remaining/60);const minutes=remaining%60;remaining=Math.floor(remaining/60);const hours=remaining%24;const days=Math.floor((now-new Date(cursorDate.getFullYear(),cursorDate.getMonth(),cursorDate.getDate()))/(24*3600*1000));return {years,months,days,hours,minutes,seconds,ms};}
+function computeAgeComponents(start, now){
+  let years=0, months=0;
+  let cursorDate=new Date(start);
+  while(new Date(cursorDate.getFullYear()+1,cursorDate.getMonth(),cursorDate.getDate())<=now){
+    cursorDate.setFullYear(cursorDate.getFullYear()+1); years++;
+  }
+  while(new Date(cursorDate.getFullYear(),cursorDate.getMonth()+1,cursorDate.getDate())<=now){
+    cursorDate.setMonth(cursorDate.getMonth()+1); months++;
+  }
+  let remaining=now-cursorDate;
+  const ms=remaining%1000;
+  remaining=Math.floor(remaining/1000);
+  const seconds=remaining%60;
+  remaining=Math.floor(remaining/60);
+  const minutes=remaining%60;
+  remaining=Math.floor(remaining/60);
+  const hours=remaining%24;
+  const days=Math.floor((now-new Date(cursorDate.getFullYear(),cursorDate.getMonth(),cursorDate.getDate()))/(24*3600*1000));
+  return {years,months,days,hours,minutes,seconds,ms};
+}
 function formatAge(){const now=new Date();const c=computeAgeComponents(origin,now);return `${c.years}y ${c.months}m ${c.days}d ${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;}
+
 async function loop(){
   while(true){
     await typeText(line1,text1);
@@ -109,11 +156,10 @@ async function loop(){
 loop();
 setInterval(()=>{line2.textContent=text2Prefix+formatAge();},50);
 
-// ====================================================
-// Quote slides generation
-// ====================================================
-const slidesWrapper=document.getElementById('slidesWrapper');
+// Slide navigation
+document.getElementById("nextBtn1").onclick=()=>{slidesWrapper.style.transform="translateX(-100vw)";}
 
+// Quotes data
 const quotesData=[
   ["Học thuật toán phức tạp làm gì... - tourist",
    "Thử thách khó làm mình thích hơn - Petr",
@@ -134,16 +180,15 @@ const quotesData=[
   ["Câu quote của tôi","\"hello world !\" - nguyenducleminh02"]
 ];
 
-// Tạo 20 slide quote, lặp lại nếu thiếu
+// Tạo 20 slide quote
 for(let i=0;i<20;i++){
   const slide=document.createElement('div');
   slide.className='slide';
   slide.id=`slide${i+2}`;
-  const canvas=document.createElement('canvas');
-  canvas.id=`canvas${i+2}`;
-  slide.appendChild(canvas);
+
   const backBtn=document.createElement('button'); backBtn.className='backBtn'; backBtn.innerText='Back'; slide.appendChild(backBtn);
   const nextBtn=document.createElement('button'); nextBtn.className='nextBtn'; nextBtn.innerText='Next'; slide.appendChild(nextBtn);
+
   const quoteBox=document.createElement('div'); quoteBox.className='quoteBox'; slide.appendChild(quoteBox);
 
   const quotes=quotesData[i%quotesData.length];
@@ -161,16 +206,16 @@ for(let i=0;i<20;i++){
   });
 
   slidesWrapper.appendChild(slide);
-  initCanvas(canvas);
 }
 
-// Slide navigation
-document.getElementById("nextBtn1").onclick=()=>{slidesWrapper.style.transform="translateX(-100vw)";}
+// Navigation buttons
 const backBtns=document.querySelectorAll('.backBtn');
 const nextBtns=document.querySelectorAll('.nextBtn');
 
 backBtns.forEach((btn,i)=>{btn.onclick=()=>{slidesWrapper.style.transform=`translateX(-${i*100}vw)`;}});
 nextBtns.forEach((btn,i)=>{btn.onclick=()=>{slidesWrapper.style.transform=`translateX(-${(i+2)*100}vw)`;}});
 </script>
+
 </body>
 </html>
+
