@@ -17,13 +17,13 @@ body{
 
 /* Slides */
 #slidesWrapper{
-  width:200vw;
+  width:400vw;
   height:100vh;
   display:flex;
   transition:transform 1s ease;
 }
 
-#slide1, #slide2 {
+.slide {
   width:100vw;
   height:100vh;
   position:relative;
@@ -57,94 +57,42 @@ canvas{
 }
 
 /* Buttons */
-#enterBtn, #sendBtn, #backBtn{
-  background:rgba(96,165,250,0.6); /* nhạt */
+button{
+  background:rgba(96,165,250,0.6);
   border:none;
   border-radius:8px;
   cursor:pointer;
   font-weight:bold;
   transition:background 0.3s;
 }
-#enterBtn:hover, #sendBtn:hover, #backBtn:hover{
+button:hover{
   background:rgba(96,165,250,0.85);
 }
 
-/* Slide 1 button */
-#enterBtn{
-  margin-top:25px;
-  padding:12px 28px;
-  font-size:20px;
-  color:#0f1724;
-  opacity:0; /* ẩn lúc typewriter */
-}
-
-/* Slide 2 comment */
-#slide2 h1{
-  margin-bottom:20px;
-  z-index:10;
-}
-#commentsBox{
-  width:70%;
-  height:55%;
-  background:#0b111b;
-  padding:15px;
-  border-radius:10px;
-  border:2px solid #60a5fa;
-  overflow-y:auto;
-  z-index:10;
-  position:relative;
-}
-#newComment{
-  width:70%;
-  padding:10px;
-  border-radius:8px;
-  border:2px solid #60a5fa;
-  background:#0b111b;
-  color:white;
-  z-index:10;
-}
-#username{
-  width:200px;
-  padding:10px;
-  margin-top:10px;
-  margin-right:10px;
-  border-radius:8px;
-  border:2px solid #60a5fa;
-  background:#0b111b;
-  color:white;
-  z-index:10;
-}
-#sendBtn{
-  padding:10px 20px;
-  margin-top:10px;
-  z-index:10;
-}
-
-/* Back button */
-#backBtn{
+/* Back/Next */
+#backBtn, #nextBtn{
   position:absolute;
   top:20px;
-  left:20px;
   padding:10px 20px;
   z-index:10;
   opacity:1;
 }
+#backBtn{ left:20px; }
+#nextBtn{ right:20px; }
 
-/* VIEW ICON */
-.viewBox{
-  position:absolute;
-  top:20px;
-  right:20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
+/* Quotes */
+.quoteBox{
+  position:relative;
   z-index:10;
-  font-weight:bold;
+  width:70%;
+  text-align:center;
 }
-.viewBox img{
-  width:30px;
-  margin-right:5px;
+.quoteText{
+  font-size:22px;
+  margin:15px 0;
+}
+.quoteAuthor{
+  font-weight:bold;
 }
 </style>
 </head>
@@ -152,33 +100,37 @@ canvas{
 
 <div id="slidesWrapper">
 
-  <!-- SLIDE 1 -->
-  <div id="slide1">
+  <!-- SLIDE 1 INTRO -->
+  <div class="slide" id="slide1">
     <canvas id="canvas"></canvas>
-    <div class="viewBox" id="view1Box">
-      <img src="https://cdn-icons-png.flaticon.com/128/593/593374.png">
-      <span id="view1Count"></span>
-    </div>
     <div id="textContainer">
         <div class="line" id="line1"></div>
         <div class="line" id="line2"></div>
-        <button id="enterBtn">Comment</button>
     </div>
+    <button id="nextBtn">Next</button>
   </div>
 
-  <!-- SLIDE 2 -->
-  <div id="slide2">
+  <!-- SLIDE 2 QUOTES -->
+  <div class="slide" id="slide2">
     <canvas id="canvas2"></canvas>
-    <div class="viewBox" id="view2Box">
-      <img src="https://cdn-icons-png.flaticon.com/128/593/593374.png">
-      <span id="view2Count"></span>
-    </div>
     <button id="backBtn">Back</button>
-    <h1>Comments</h1>
-    <div id="commentsBox"></div>
-    <input id="username" placeholder="Your name...">
-    <textarea id="newComment" placeholder="Write a comment..."></textarea>
-    <button id="sendBtn">Send</button>
+    <div class="quoteBox" id="quoteBox2"></div>
+    <button id="nextBtn2" style="position:absolute; top:20px; right:20px;">Next</button>
+  </div>
+
+  <!-- SLIDE 3 QUOTES -->
+  <div class="slide" id="slide3">
+    <canvas id="canvas3"></canvas>
+    <button id="backBtn3">Back</button>
+    <div class="quoteBox" id="quoteBox3"></div>
+    <button id="nextBtn3" style="position:absolute; top:20px; right:20px;">Next</button>
+  </div>
+
+  <!-- SLIDE 4 QUOTES -->
+  <div class="slide" id="slide4">
+    <canvas id="canvas4"></canvas>
+    <button id="backBtn4">Back</button>
+    <div class="quoteBox" id="quoteBox4"></div>
   </div>
 
 </div>
@@ -187,63 +139,7 @@ canvas{
 
 <script>
 /* =========================================================
-   🎯 VIEW COUNTER
-========================================================= */
-if(!localStorage.getItem("profileViews")){
-  localStorage.setItem("profileViews", 1);
-}else{
-  localStorage.setItem("profileViews",
-    parseInt(localStorage.getItem("profileViews")) + 1
-  );
-}
-let views = localStorage.getItem("profileViews");
-document.getElementById("view1Count").innerText = views;
-document.getElementById("view2Count").innerText = views;
-
-/* =========================================================
-   🎯 COMMENT SYSTEM
-========================================================= */
-function loadComments(){
-  let box = document.getElementById("commentsBox");
-  box.innerHTML = "";
-  let list = JSON.parse(localStorage.getItem("comments") || "[]");
-  list.forEach(c => {
-    let div = document.createElement("div");
-    div.style.marginBottom = "12px";
-    div.style.zIndex="10";
-    div.innerHTML = `<b>${c.name}</b>: ${c.text}`;
-    box.appendChild(div);
-  });
-}
-loadComments();
-
-document.getElementById("sendBtn").onclick = () => {
-  let name = document.getElementById("username").value.trim();
-  let text = document.getElementById("newComment").value.trim();
-  if(!name || !text) return;
-  let list = JSON.parse(localStorage.getItem("comments") || "[]");
-  list.push({name, text});
-  localStorage.setItem("comments", JSON.stringify(list));
-  document.getElementById("newComment").value = "";
-  loadComments();
-};
-
-/* =========================================================
-   🎯 BACK BUTTON
-========================================================= */
-document.getElementById("backBtn").onclick = () => {
-  document.getElementById("slidesWrapper").style.transform="translateX(0vw)";
-};
-
-/* =========================================================
-   🎯 SLIDE SWITCH
-========================================================= */
-document.getElementById("enterBtn").addEventListener("click", () => {
-  document.getElementById("slidesWrapper").style.transform="translateX(-100vw)";
-});
-
-/* =========================================================
-   🎯 CANVAS ANIMATION + CURSOR TRAIL SOFT + GLOW
+   🎯 CANVAS ANIMATION + CURSOR TRAIL + GLOW
 ========================================================= */
 function initCanvas(canvas){
   const ctx = canvas.getContext('2d');
@@ -289,7 +185,7 @@ function initCanvas(canvas){
       if(l.y>ch) rainLetters.splice(i,1);
     }
 
-    // Cursor trail soft
+    // Cursor trail
     for(let i=trails.length-1;i>=0;i--){
       const t=trails[i];
       t.x += (i===0?cursor.x:trails[i-1].x-t.x)*0.2;
@@ -321,9 +217,11 @@ function initCanvas(canvas){
 
 initCanvas(document.getElementById("canvas"));
 initCanvas(document.getElementById("canvas2"));
+initCanvas(document.getElementById("canvas3"));
+initCanvas(document.getElementById("canvas4"));
 
 /* =========================================================
-   🎯 TYPEWRITER
+   🎯 TYPEWRITER INTRO
 ========================================================= */
 const line1=document.getElementById('line1');
 const line2=document.getElementById('line2');
@@ -384,9 +282,9 @@ async function loop(){
   while(true){
     await typeText(line1,text1);
     await typeText(line2,text2Prefix+formatAge());
-    enterBtn.style.opacity=1;
+    document.querySelector("#nextBtn").style.opacity=1;
     await new Promise(r=>setTimeout(r,5000));
-    enterBtn.style.opacity=0;
+    document.querySelector("#nextBtn").style.opacity=0;
     await deleteText(line1);
     await deleteText(line2);
     await new Promise(r=>setTimeout(r,1000));
@@ -395,7 +293,64 @@ async function loop(){
 loop();
 setInterval(()=>{line2.textContent=text2Prefix+formatAge();},50);
 
+/* =========================================================
+   🎯 QUOTES DATA
+========================================================= */
+const quotes = {
+  slide2:[
+    {text:"Học thuật toán phức tạp làm gì khi ta chưa nắm được cơ bản.", author:"tourist", rating:"legendary"},
+    {text:"Đừng ngại thử thách, sai lầm là cách duy nhất để học.", author:"Benq", rating:"international"},
+    {text:"Đọc code của người khác là cách nhanh nhất để tiến bộ.", author:"Petr", rating:"international"}
+  ],
+  slide3:[
+    {text:"Giải bài khó không phải để khoe, mà để học cách tư duy.", author:"radewoosh", rating:"international"},
+    {text:"Tham gia contest đều đặn giúp bạn tiến bộ hơn là học lý thuyết.", author:"maroonrk", rating:"expert"},
+    {text:"Code đẹp không bằng code hiệu quả.", author:"Um_nik", rating:"international"}
+  ],
+  slide4:[
+    {text:"Học thuật toán là cách để rèn luyện tư duy logic.", author:"ecnerwala", rating:"international"},
+    {text:"Đừng chạy theo điểm số, hãy chạy theo kiến thức.", author:"KrK", rating:"grandmaster"},
+    {text:"Luôn thử thách bản thân để phát triển.", author:"tourist", rating:"legendary"}
+  ]
+};
+
+function getColor(rating){
+  switch(rating){
+    case "legendary": return "red";
+    case "international": return "orange";
+    case "grandmaster": return "purple";
+    case "expert": return "blue";
+    default: return "white";
+  }
+}
+
+function renderQuotes(slideId, boxId){
+  const box=document.getElementById(boxId);
+  box.innerHTML="";
+  quotes[slideId].forEach(q=>{
+    const div=document.createElement("div");
+    div.className="quoteText";
+    const authorColor=getColor(q.rating);
+    div.innerHTML=`"${q.text}" - <span class="quoteAuthor" style="color:${authorColor}">${q.author}</span>`;
+    box.appendChild(div);
+  });
+}
+
+renderQuotes("slide2","quoteBox2");
+renderQuotes("slide3","quoteBox3");
+renderQuotes("slide4","quoteBox4");
+
+/* =========================================================
+   🎯 SLIDE NAV
+========================================================= */
+const wrapper=document.getElementById("slidesWrapper");
+document.getElementById("nextBtn").onclick=()=>{wrapper.style.transform="translateX(-100vw)";}
+document.getElementById("backBtn").onclick=()=>{wrapper.style.transform="translateX(0vw)";}
+document.getElementById("nextBtn2").onclick=()=>{wrapper.style.transform="translateX(-200vw)";}
+document.getElementById("backBtn3").onclick=()=>{wrapper.style.transform="translateX(-100vw)";}
+document.getElementById("nextBtn3").onclick=()=>{wrapper.style.transform="translateX(-300vw)";}
+document.getElementById("backBtn4").onclick=()=>{wrapper.style.transform="translateX(-200vw)";}
+
 </script>
 </body>
 </html>
-
