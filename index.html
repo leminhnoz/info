@@ -4,133 +4,33 @@
 <meta charset="UTF-8">
 <title>Hello world !</title>
 <style>
-body{
-  margin:0;
-  padding:0;
-  height:100vh;
-  overflow:hidden;
-  background:#0f1724;
-  color:#e6eef8;
-  font-family:sans-serif;
-  cursor:none;
-}
-
-/* Slides */
-#slidesWrapper{
-  width:400vw;
-  height:100vh;
-  display:flex;
-  transition:transform 1s ease;
-}
-
-.slide {
-  width:100vw;
-  height:100vh;
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-}
-
-/* Canvas */
-canvas{
-  position:absolute;
-  top:0; left:0;
-  z-index:0;
-}
-
-/* Intro text */
-#textContainer{
-  position:relative;
-  z-index:10;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-.line{
-  font-size:24px;
-  margin:5px 0;
-  white-space:pre;
-  opacity:0;
-  transition: opacity 1s;
-}
-
-/* Buttons */
-button{
-  background:rgba(96,165,250,0.6);
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
-  transition:background 0.3s;
-}
-button:hover{
-  background:rgba(96,165,250,0.85);
-}
-
-/* Back/Next */
-#backBtn, #nextBtn{
-  position:absolute;
-  top:20px;
-  padding:10px 20px;
-  z-index:10;
-  opacity:1;
-}
-#backBtn{ left:20px; }
-#nextBtn{ right:20px; }
-
-/* Quotes */
-.quoteBox{
-  position:relative;
-  z-index:10;
-  width:70%;
-  text-align:center;
-}
-.quoteText{
-  font-size:22px;
-  margin:15px 0;
-}
-.quoteAuthor{
-  font-weight:bold;
-}
+body{margin:0;padding:0;height:100vh;overflow:hidden;background:#0f1724;color:#e6eef8;font-family:sans-serif;cursor:none;}
+#slidesWrapper{width:2100vw;height:100vh;display:flex;transition:transform 1s ease;}
+.slide{width:100vw;height:100vh;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+canvas{position:absolute;top:0;left:0;z-index:0;}
+#textContainer{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;}
+.line{font-size:24px;margin:5px 0;white-space:pre;opacity:0;transition:opacity 1s;}
+button{background:rgba(96,165,250,0.6);border:none;border-radius:8px;cursor:pointer;font-weight:bold;transition:background 0.3s;}
+button:hover{background:rgba(96,165,250,0.85);}
+.backBtn{position:absolute;top:20px;left:20px;padding:10px 20px;z-index:10;}
+.nextBtn{position:absolute;top:20px;right:20px;padding:10px 20px;z-index:10;}
+.quoteBox{position:relative;z-index:10;width:70%;text-align:center;}
+.quoteText{font-size:22px;margin:15px 0;}
+.quoteAuthor{font-weight:bold;}
 </style>
 </head>
 <body>
 
 <div id="slidesWrapper">
 
-  <!-- SLIDE 1 INTRO -->
+  <!-- Slide 1 Intro -->
   <div class="slide" id="slide1">
     <canvas id="canvas"></canvas>
     <div id="textContainer">
-        <div class="line" id="line1"></div>
-        <div class="line" id="line2"></div>
+      <div class="line" id="line1"></div>
+      <div class="line" id="line2"></div>
     </div>
-    <button id="nextBtn">Next</button>
-  </div>
-
-  <!-- SLIDE 2 QUOTES -->
-  <div class="slide" id="slide2">
-    <canvas id="canvas2"></canvas>
-    <button id="backBtn">Back</button>
-    <div class="quoteBox" id="quoteBox2"></div>
-    <button id="nextBtn2" style="position:absolute; top:20px; right:20px;">Next</button>
-  </div>
-
-  <!-- SLIDE 3 QUOTES -->
-  <div class="slide" id="slide3">
-    <canvas id="canvas3"></canvas>
-    <button id="backBtn3">Back</button>
-    <div class="quoteBox" id="quoteBox3"></div>
-    <button id="nextBtn3" style="position:absolute; top:20px; right:20px;">Next</button>
-  </div>
-
-  <!-- SLIDE 4 QUOTES -->
-  <div class="slide" id="slide4">
-    <canvas id="canvas4"></canvas>
-    <button id="backBtn4">Back</button>
-    <div class="quoteBox" id="quoteBox4"></div>
+    <button id="nextBtn1">Next</button>
   </div>
 
 </div>
@@ -138,153 +38,69 @@ button:hover{
 <audio id="keySound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
 <script>
-/* =========================================================
-   🎯 CANVAS ANIMATION + CURSOR TRAIL + GLOW
-========================================================= */
+// ====================================================
+// Cursor + Rain Letters
+// ====================================================
 function initCanvas(canvas){
   const ctx = canvas.getContext('2d');
   let cw = canvas.width = window.innerWidth;
   let ch = canvas.height = window.innerHeight;
-
-  const cursor = {x:cw/2, y:ch/2};
-  const trailCount = 25;
-  const trails = [];
+  const cursor={x:cw/2,y:ch/2};
+  const trailCount=25;
+  const trails=[];
   for(let i=0;i<trailCount;i++) trails.push({x:cursor.x,y:cursor.y});
-
   const rainLetters=[];
-
   function spawnLetter(){
-    const l={
-      x: Math.random()*cw,
-      y: -20,
-      speed: 1+Math.random()*3,
-      char: String.fromCharCode(33+Math.floor(Math.random()*94)),
-      fontSize: 10+Math.random()*20,
-      opacity: 0.4+Math.random()*0.4
-    };
+    const l={x:Math.random()*cw,y:-20,speed:1+Math.random()*3,char:String.fromCharCode(33+Math.floor(Math.random()*94)),fontSize:10+Math.random()*20,opacity:0.4+Math.random()*0.4};
     rainLetters.push(l);
   }
   setInterval(spawnLetter,50);
-
-  document.addEventListener('mousemove', e=>{
-    cursor.x=e.clientX;
-    cursor.y=e.clientY;
-  });
-
+  document.addEventListener('mousemove', e=>{cursor.x=e.clientX;cursor.y=e.clientY;});
   function animate(){
     ctx.clearRect(0,0,cw,ch);
-
-    // Rain letters
     for(let i=rainLetters.length-1;i>=0;i--){
-      const l=rainLetters[i];
-      l.y+=l.speed;
+      const l=rainLetters[i]; l.y+=l.speed;
       ctx.globalAlpha=l.opacity;
       ctx.font=`${l.fontSize}px monospace`;
-      ctx.fillStyle="#60a5fa";
-      ctx.fillText(l.char,l.x,l.y);
+      ctx.fillStyle="#60a5fa"; ctx.fillText(l.char,l.x,l.y);
       if(l.y>ch) rainLetters.splice(i,1);
     }
-
-    // Cursor trail
     for(let i=trails.length-1;i>=0;i--){
-      const t=trails[i];
-      t.x += (i===0?cursor.x:trails[i-1].x-t.x)*0.2;
-      t.y += (i===0?cursor.y:trails[i-1].y-t.y)*0.2;
-      ctx.strokeStyle=`rgba(96,165,250,${(trailCount-i)/trailCount})`;
-      ctx.lineWidth=2;
-      ctx.beginPath();
-      if(i>0){
-        ctx.moveTo(trails[i-1].x,trails[i-1].y);
-        ctx.lineTo(t.x,t.y);
-        ctx.stroke();
-      }
+      const t=trails[i]; t.x+=(i===0?cursor.x:trails[i-1].x-t.x)*0.2; t.y+=(i===0?cursor.y:trails[i-1].y-t.y)*0.2;
+      ctx.strokeStyle=`rgba(96,165,250,${(trailCount-i)/trailCount})`; ctx.lineWidth=2; ctx.beginPath();
+      if(i>0){ctx.moveTo(trails[i-1].x,trails[i-1].y);ctx.lineTo(t.x,t.y);ctx.stroke();}
     }
-
-    // Cursor {}
-    ctx.fillStyle="rgba(96,165,250,0.9)";
-    ctx.font="24px monospace";
-    ctx.fillText("{}", cursor.x-8, cursor.y+8);
-
+    ctx.fillStyle="rgba(96,165,250,0.9)"; ctx.font="24px monospace"; ctx.fillText("{}", cursor.x-8, cursor.y+8);
     requestAnimationFrame(animate);
   }
   animate();
-
-  window.addEventListener('resize', ()=>{
-    cw = canvas.width = window.innerWidth;
-    ch = canvas.height = window.innerHeight;
-  });
+  window.addEventListener('resize',()=>{cw=canvas.width=window.innerWidth; ch=canvas.height=window.innerHeight;});
 }
+initCanvas(document.getElementById('canvas'));
 
-initCanvas(document.getElementById("canvas"));
-initCanvas(document.getElementById("canvas2"));
-initCanvas(document.getElementById("canvas3"));
-initCanvas(document.getElementById("canvas4"));
-
-/* =========================================================
-   🎯 TYPEWRITER INTRO
-========================================================= */
+// ====================================================
+// Typewriter Intro
+// ====================================================
 const line1=document.getElementById('line1');
 const line2=document.getElementById('line2');
 const keySound=document.getElementById('keySound');
+const TYPE_SPEED=50;
 const text1="Hi ! My full name is Nguyen Duc Le Minh , and u ?";
 const text2Prefix="My age: ";
-const TYPE_SPEED=50;
-
 function playKey(){ keySound.currentTime=0; keySound.play().catch(()=>{}); }
-
-async function typeText(element,text){
-  element.style.opacity=1;
-  for(let i=0;i<=text.length;i++){
-    element.textContent=text.slice(0,i);
-    playKey();
-    await new Promise(r=>setTimeout(r,TYPE_SPEED));
-  }
-}
-
-async function deleteText(element){
-  for(let i=element.textContent.length;i>=0;i--){
-    element.textContent=element.textContent.slice(0,i);
-    await new Promise(r=>setTimeout(r,TYPE_SPEED/2));
-  }
-}
-
-// Age counter
+async function typeText(element,text){element.style.opacity=1;for(let i=0;i<=text.length;i++){element.textContent=text.slice(0,i);playKey();await new Promise(r=>setTimeout(r,TYPE_SPEED));}}
+async function deleteText(element){for(let i=element.textContent.length;i>=0;i--){element.textContent=element.textContent.slice(0,i);await new Promise(r=>setTimeout(r,TYPE_SPEED/2));}}
 const origin=new Date(2011,1,2,0,0,0,0);
 function pad(n,len=2){return String(n).padStart(len,'0');}
-function computeAgeComponents(start, now){
-  let years=0, months=0;
-  let cursorDate=new Date(start);
-  while(new Date(cursorDate.getFullYear()+1,cursorDate.getMonth(),cursorDate.getDate())<=now){
-    cursorDate.setFullYear(cursorDate.getFullYear()+1); years++;
-  }
-  while(new Date(cursorDate.getFullYear(),cursorDate.getMonth()+1,cursorDate.getDate())<=now){
-    cursorDate.setMonth(cursorDate.getMonth()+1); months++;
-  }
-  let remaining=now-cursorDate;
-  const ms=remaining%1000;
-  remaining=Math.floor(remaining/1000);
-  const seconds=remaining%60;
-  remaining=Math.floor(remaining/60);
-  const minutes=remaining%60;
-  remaining=Math.floor(remaining/60);
-  const hours=remaining%24;
-  const days=Math.floor((now-new Date(cursorDate.getFullYear(),cursorDate.getMonth(),cursorDate.getDate()))/(24*3600*1000));
-  return {years,months,days,hours,minutes,seconds,ms};
-}
-
-function formatAge(){
-  const now=new Date();
-  const c=computeAgeComponents(origin,now);
-  return `${c.years}y ${c.months}m ${c.days}d ${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;
-}
-
+function computeAgeComponents(start, now){let years=0, months=0;let cursorDate=new Date(start);while(new Date(cursorDate.getFullYear()+1,cursorDate.getMonth(),cursorDate.getDate())<=now){cursorDate.setFullYear(cursorDate.getFullYear()+1); years++;}while(new Date(cursorDate.getFullYear(),cursorDate.getMonth()+1,cursorDate.getDate())<=now){cursorDate.setMonth(cursorDate.getMonth()+1); months++;}let remaining=now-cursorDate;const ms=remaining%1000;remaining=Math.floor(remaining/1000);const seconds=remaining%60;remaining=Math.floor(remaining/60);const minutes=remaining%60;remaining=Math.floor(remaining/60);const hours=remaining%24;const days=Math.floor((now-new Date(cursorDate.getFullYear(),cursorDate.getMonth(),cursorDate.getDate()))/(24*3600*1000));return {years,months,days,hours,minutes,seconds,ms};}
+function formatAge(){const now=new Date();const c=computeAgeComponents(origin,now);return `${c.years}y ${c.months}m ${c.days}d ${c.hours}:${pad(c.minutes)}:${pad(c.seconds)}.${String(c.ms).padStart(3,'0')}`;}
 async function loop(){
   while(true){
     await typeText(line1,text1);
     await typeText(line2,text2Prefix+formatAge());
-    document.querySelector("#nextBtn").style.opacity=1;
+    document.getElementById("nextBtn1").style.opacity=1;
     await new Promise(r=>setTimeout(r,5000));
-    document.querySelector("#nextBtn").style.opacity=0;
+    document.getElementById("nextBtn1").style.opacity=0;
     await deleteText(line1);
     await deleteText(line2);
     await new Promise(r=>setTimeout(r,1000));
@@ -293,64 +109,68 @@ async function loop(){
 loop();
 setInterval(()=>{line2.textContent=text2Prefix+formatAge();},50);
 
-/* =========================================================
-   🎯 QUOTES DATA
-========================================================= */
-const quotes = {
-  slide2:[
-    {text:"Học thuật toán phức tạp làm gì khi ta chưa nắm được cơ bản.", author:"tourist", rating:"legendary"},
-    {text:"Đừng ngại thử thách, sai lầm là cách duy nhất để học.", author:"Benq", rating:"international"},
-    {text:"Đọc code của người khác là cách nhanh nhất để tiến bộ.", author:"Petr", rating:"international"}
-  ],
-  slide3:[
-    {text:"Giải bài khó không phải để khoe, mà để học cách tư duy.", author:"radewoosh", rating:"international"},
-    {text:"Tham gia contest đều đặn giúp bạn tiến bộ hơn là học lý thuyết.", author:"maroonrk", rating:"expert"},
-    {text:"Code đẹp không bằng code hiệu quả.", author:"Um_nik", rating:"international"}
-  ],
-  slide4:[
-    {text:"Học thuật toán là cách để rèn luyện tư duy logic.", author:"ecnerwala", rating:"international"},
-    {text:"Đừng chạy theo điểm số, hãy chạy theo kiến thức.", author:"KrK", rating:"grandmaster"},
-    {text:"Luôn thử thách bản thân để phát triển.", author:"tourist", rating:"legendary"}
-  ]
-};
+// ====================================================
+// Quote slides generation
+// ====================================================
+const slidesWrapper=document.getElementById('slidesWrapper');
 
-function getColor(rating){
-  switch(rating){
-    case "legendary": return "red";
-    case "international": return "orange";
-    case "grandmaster": return "purple";
-    case "expert": return "blue";
-    default: return "white";
-  }
-}
+const quotesData=[
+  ["Học thuật toán phức tạp làm gì... - tourist",
+   "Thử thách khó làm mình thích hơn - Petr",
+   "Debug là một nghệ thuật - Benq"],
+  ["Luôn viết code sạch - ecnerwala",
+   "Học từ sai lầm - Radewoosh",
+   "Tập trung vào cơ bản - Um_nik"],
+  ["Hãy kiên nhẫn với recursion - Errichto",
+   "Thử thuật toán mới mỗi ngày - Maroonrk"],
+  ["Không bao giờ bỏ cuộc - Maksim",
+   "Tìm hiểu lý thuyết trước - MikeMirzayanov"],
+  ["Chỉ số rating quan trọng, nhưng đam mê quan trọng hơn - SecondThread",
+   "Học nhóm tốt hơn học một mình - uwi"],
+  ["Đọc code người khác rất bổ ích - Radewoosh",
+   "Tự học mỗi ngày - tourist"],
+  ["Practice makes perfect - Petr",
+   "Học toán trước khi học thuật toán - Benq"],
+  ["Câu quote của tôi","\"hello world !\" - nguyenducleminh02"]
+];
 
-function renderQuotes(slideId, boxId){
-  const box=document.getElementById(boxId);
-  box.innerHTML="";
-  quotes[slideId].forEach(q=>{
-    const div=document.createElement("div");
-    div.className="quoteText";
-    const authorColor=getColor(q.rating);
-    div.innerHTML=`"${q.text}" - <span class="quoteAuthor" style="color:${authorColor}">${q.author}</span>`;
-    box.appendChild(div);
+// Tạo 20 slide quote, lặp lại nếu thiếu
+for(let i=0;i<20;i++){
+  const slide=document.createElement('div');
+  slide.className='slide';
+  slide.id=`slide${i+2}`;
+  const canvas=document.createElement('canvas');
+  canvas.id=`canvas${i+2}`;
+  slide.appendChild(canvas);
+  const backBtn=document.createElement('button'); backBtn.className='backBtn'; backBtn.innerText='Back'; slide.appendChild(backBtn);
+  const nextBtn=document.createElement('button'); nextBtn.className='nextBtn'; nextBtn.innerText='Next'; slide.appendChild(nextBtn);
+  const quoteBox=document.createElement('div'); quoteBox.className='quoteBox'; slide.appendChild(quoteBox);
+
+  const quotes=quotesData[i%quotesData.length];
+  quotes.forEach(q=>{
+    const div=document.createElement('div'); div.className='quoteText';
+    if(q.includes('nguyenducleminh02')){
+      div.innerHTML=`<span style="color:gray">${q}</span>`;
+    } else {
+      const parts=q.split(' - ');
+      const name=parts[1]||'';
+      const quoteText=parts[0];
+      div.innerHTML=`"${quoteText}" - <span style="color:black">${name.charAt(0)}</span><span style="color:red">${name.slice(1)}</span>`;
+    }
+    quoteBox.appendChild(div);
   });
+
+  slidesWrapper.appendChild(slide);
+  initCanvas(canvas);
 }
 
-renderQuotes("slide2","quoteBox2");
-renderQuotes("slide3","quoteBox3");
-renderQuotes("slide4","quoteBox4");
+// Slide navigation
+document.getElementById("nextBtn1").onclick=()=>{slidesWrapper.style.transform="translateX(-100vw)";}
+const backBtns=document.querySelectorAll('.backBtn');
+const nextBtns=document.querySelectorAll('.nextBtn');
 
-/* =========================================================
-   🎯 SLIDE NAV
-========================================================= */
-const wrapper=document.getElementById("slidesWrapper");
-document.getElementById("nextBtn").onclick=()=>{wrapper.style.transform="translateX(-100vw)";}
-document.getElementById("backBtn").onclick=()=>{wrapper.style.transform="translateX(0vw)";}
-document.getElementById("nextBtn2").onclick=()=>{wrapper.style.transform="translateX(-200vw)";}
-document.getElementById("backBtn3").onclick=()=>{wrapper.style.transform="translateX(-100vw)";}
-document.getElementById("nextBtn3").onclick=()=>{wrapper.style.transform="translateX(-300vw)";}
-document.getElementById("backBtn4").onclick=()=>{wrapper.style.transform="translateX(-200vw)";}
-
+backBtns.forEach((btn,i)=>{btn.onclick=()=>{slidesWrapper.style.transform=`translateX(-${i*100}vw)`;}});
+nextBtns.forEach((btn,i)=>{btn.onclick=()=>{slidesWrapper.style.transform=`translateX(-${(i+2)*100}vw)`;}});
 </script>
 </body>
 </html>
